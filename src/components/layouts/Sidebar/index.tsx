@@ -1,14 +1,19 @@
+"use client"
+
 import { Button } from '@/components/ui/button'
 import React, { FC } from 'react'
 import { HiOutlineClipboardList } from "react-icons/hi"
 import { BsBuildings, BsGear } from "react-icons/bs"
 import { AiOutlineHome, AiOutlineMessage, AiOutlineUsergroupAdd, AiOutlineCalendar, AiOutlineLogout } from "react-icons/ai"
+import { useRouter } from 'next/navigation'
 
 interface SidebarProps {
 
 }
 
 const Sidebar: FC<SidebarProps> = ({ }) => {
+    const router = useRouter();
+
     return (
         <div className='pb-12 min-h-screen'>
             <div className='space-y-4 py-4'>
@@ -17,7 +22,7 @@ const Sidebar: FC<SidebarProps> = ({ }) => {
                         Dashboard
                     </h2>
                     <div className='space-y-3'>
-                        <Button variant={"ghost"} className='w-full justify-start rounded-none  hover:text-primary'>
+                        <Button variant={"ghost"} onClick={() => router.push("/")} className='w-full justify-start rounded-none  hover:text-primary'>
                             <AiOutlineHome className="mr-2 text-lg" />
                             Home
                         </Button>
@@ -33,7 +38,7 @@ const Sidebar: FC<SidebarProps> = ({ }) => {
                             <AiOutlineUsergroupAdd className="mr-2 text-lg" />
                             All Applicants
                         </Button>
-                        <Button variant={"ghost"} className='w-full justify-start rounded-none hover:text-primary'>
+                        <Button variant={"ghost"} onClick={() => router.push("/job-listings")} className='w-full justify-start rounded-none hover:text-primary'>
                             <HiOutlineClipboardList className="mr-2 text-lg" />
                             Job Listings
                         </Button>
@@ -49,7 +54,7 @@ const Sidebar: FC<SidebarProps> = ({ }) => {
                     <h2 className='mb-2 px-4 text-lg font-semibold'>
                         Settings
                     </h2>
-                    <Button variant={"ghost"} className='w-full justify-start rounded-none  hover:text-primary'>
+                    <Button variant={"ghost"} onClick={() => router.push("/settings")} className='w-full justify-start rounded-none  hover:text-primary'>
                         <BsGear className="mr-2 text-lg" />
                         Settings
                     </Button>

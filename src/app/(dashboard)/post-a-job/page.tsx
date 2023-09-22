@@ -11,7 +11,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import FieldInput from '@/components/organisms/FieldInput';
 import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { JOBTYPES } from '@/contants';
+import { JOBTYPES } from '@/constants';
 import {
     Select,
     SelectContent,
@@ -22,6 +22,7 @@ import {
 import InputSkills from '@/components/organisms/InputSkills';
 import CKEditor from '@/components/organisms/CKEditor';
 import { Button } from '@/components/ui/button';
+import InputBenefits from '@/components/organisms/InpuBenefits';
 
 interface PostJobPageProps {
 
@@ -42,8 +43,8 @@ const PostJobPage: FC<PostJobPageProps> = ({ }) => {
     }
 
     useEffect(() => {
-		setEditorLoaded(true);
-	}, []);
+        setEditorLoaded(true);
+    }, []);
 
 
     return (
@@ -195,52 +196,59 @@ const PostJobPage: FC<PostJobPageProps> = ({ }) => {
                     </FieldInput>
 
                     <FieldInput
-						title="Job Descriptions"
-						subtitle="Job titles must be describe one position"
-					>
-						<CKEditor
-							form={form}
-							name="jobDescription"
+                        title="Job Descriptions"
+                        subtitle="Job titles must be describe one position"
+                    >
+                        <CKEditor
+                            form={form}
+                            name="jobDescription"
                             editorLoaded={editorLoaded}
-						/>
-					</FieldInput>
+                        />
+                    </FieldInput>
 
-					<FieldInput
-						title="Responsibilities"
-						subtitle="Outline the core responsibilities of the position"
-					>
-						<CKEditor
-							form={form}
-							name="responsibility"
+                    <FieldInput
+                        title="Responsibilities"
+                        subtitle="Outline the core responsibilities of the position"
+                    >
+                        <CKEditor
+                            form={form}
+                            name="responsibility"
                             editorLoaded={editorLoaded}
-						/>
-					</FieldInput>
+                        />
+                    </FieldInput>
 
-					<FieldInput
-						title="Who You Are"
-						subtitle="Add your preferred candidates qualifications"
-					>
-						<CKEditor
-							form={form}
-							name="whoYouAre"
+                    <FieldInput
+                        title="Who You Are"
+                        subtitle="Add your preferred candidates qualifications"
+                    >
+                        <CKEditor
+                            form={form}
+                            name="whoYouAre"
                             editorLoaded={editorLoaded}
-						/>
-					</FieldInput>
+                        />
+                    </FieldInput>
 
-					<FieldInput
-						title="Nice-To-Haves"
-						subtitle="Add nice-to-have skills and qualifications for the role to encourage a more diverse set of candidates to apply"
-					>
-						<CKEditor
-							form={form}
-							name="niceToHaves"
+                    <FieldInput
+                        title="Nice-To-Haves"
+                        subtitle="Add nice-to-have skills and qualifications for the role to encourage a more diverse set of candidates to apply"
+                    >
+                        <CKEditor
+                            form={form}
+                            name="niceToHaves"
                             editorLoaded={editorLoaded}
-						/>
-					</FieldInput>
+                        />
+                    </FieldInput>
 
-					<div className="flex justify-end">
-						<Button size="lg">Do a Review</Button>
-					</div>
+                    <FieldInput
+                        title="Perks and Benefits"
+                        subtitle="Encourage more people to apply by sharing the attractive rewards and benefits you offer your employees"
+                    >
+                        <InputBenefits form={form} />
+                    </FieldInput>
+
+                    <div className="flex justify-end">
+                        <Button size="lg">Do a Review</Button>
+                    </div>
                 </form>
             </Form>
         </div>
