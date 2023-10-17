@@ -23,24 +23,71 @@ import InputSkills from '@/components/organisms/InputSkills';
 import CKEditor from '@/components/organisms/CKEditor';
 import { Button } from '@/components/ui/button';
 import InputBenefits from '@/components/organisms/InpuBenefits';
+import useSWR from "swr";
+import { fetcher } from "@/lib/utils";
+import { CategoryJob } from "@prisma/client";
+import { useSession } from "next-auth/react";
+import moment from "moment";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/components/ui/use-toast";
 
 interface PostJobPageProps {
 
 }
 
 const PostJobPage: FC<PostJobPageProps> = ({ }) => {
-    const form = useForm<z.infer<typeof jobFormSchema>>({
-        resolver: zodResolver(jobFormSchema),
-        defaultValues: {
-            requiredSkills: []
-        }
-    })
+    const { data } = useSWR<CategoryJob[]>("/api/job/categories", fetcher);
+
+    const { data: session } = useSession();
+    const { toast } = useToast();
 
     const [editorLoaded, setEditorLoaded] = useState<boolean>(false);
 
-    const onSubmit = (val: z.infer<typeof jobFormSchema>) => {
-        console.log(val)
-    }
+    const form = useForm<z.infer<typeof jobFormSchema>>({
+        resolver: zodResolver(jobFormSchema),
+        defaultValues: {
+            requiredSkills: [],
+        },
+    });
+
+    const router = useRouter();
+
+    const onSubmit = async (val: z.infer<typeof jobFormSchema>) => {
+        try {
+            const body: any = {
+                applicants: 0,
+                benefits: val.benefits,
+                categoryId: val.categoryId,
+                companyId: session?.user.id!!,
+                datePosted: moment().toDate(),
+                description: val.jobDescription,
+                dueDate: moment().add(1, "M").toDate(),
+                jobType: val.jobType,
+                needs: 20,
+                niceToHaves: val.niceToHaves,
+                requiredSkills: val.requiredSkills,
+                responsibility: val.responsibility,
+                roles: val.roles,
+                salaryFrom: val.salaryFrom,
+                salaryTo: val.salaryTo,
+                whoYouAre: val.whoYouAre,
+            };
+
+            await fetch("/api/job", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(body),
+            });
+
+            await router.push("/job-listings");
+        } catch (error) {
+            toast({
+                title: "Error",
+                description: "Please try again",
+            });
+            console.log(error);
+        }
+    };
 
     useEffect(() => {
         setEditorLoaded(true);
@@ -49,14 +96,16 @@ const PostJobPage: FC<PostJobPageProps> = ({ }) => {
 
     return (
         <div>
-            <div className='inline-flex items-center gap-2 cursor-pointer hover:text-primary'>
-                <ArrowLeftIcon className='w-7 h-7' />
-                <span className='text-2xl font-semibold'>Post a Job</span>
+            <div className="inline-flex items-center gap-2 cursor-pointer hover:text-primary">
+                <ArrowLeftIcon className="w-7 h-7" />
+                <span className="text-2xl font-semibold">Post a Job</span>
             </div>
 
-            <div className='my-5'>
-                <div className='text-lg font-semibold'>Basic Information</div>
-                <div className='text-gray-400'>List out your top perks and benefits</div>
+            <div className="my-5">
+                <div className="text-lg font-semibold">Basic Information</div>
+                <div className="text-gray-400">
+                    List out your top perks and benefits.
+                </div>
             </div>
 
             <Separator />
@@ -64,15 +113,15 @@ const PostJobPage: FC<PostJobPageProps> = ({ }) => {
             <Form {...form}>
                 <form
                     onSubmit={form.handleSubmit(onSubmit)}
-                    className='mt-5 space-y-6 pt-6'
+                    className="mt-5 space-y-6 pt-6"
                 >
                     <FieldInput
                         title="Job Title"
-                        subtitle='Job titles must be describe one position'
+                        subtitle="Job titles must be describe one position"
                     >
                         <FormField
                             control={form.control}
-                            name='roles'
+                            name="roles"
                             render={({ field }) => (
                                 <FormItem>
                                     <FormControl>
@@ -91,28 +140,38 @@ const PostJobPage: FC<PostJobPageProps> = ({ }) => {
                         />
                     </FieldInput>
 
-                    <FieldInput title="Type of Employment" subtitle="You can select multiple type of employment">
+                    <FieldInput
+                        title="Type of Employment"
+                        subtitle="You can select multiple type of employment"
+                    >
                         <FormField
                             control={form.control}
-                            name='jobType'
+                            name="jobType"
                             render={({ field }) => (
-                                <FormItem className='space-y-3'>
+                                <FormItem className="space-y-3">
                                     <FormControl>
                                         <RadioGroup
                                             onValueChange={field.onChange}
                                             defaultValue={field.value}
                                             className="flex flex-col space-y-1"
                                         >
-                                            {JOBTYPES.map((item: string, i: number) => (
-                                                <FormItem key={item + i} className='flex items-center space-x-3 space-y-0'>
-                                                    <FormControl>
-                                                        <RadioGroupItem value={item} />
-                                                    </FormControl>
-                                                    <FormLabel className='font-normal'>
-                                                        {item}
-                                                    </FormLabel>
-                                                </FormItem>
-                                            ))}
+                                            {JOBTYPES.map(
+                                                (item: string, i: number) => (
+                                                    <FormItem
+                                                        key={item + i}
+                                                        className="flex items-center space-x-3 space-y-0"
+                                                    >
+                                                        <FormControl>
+                                                            <RadioGroupItem
+                                                                value={item}
+                                                            />
+                                                        </FormControl>
+                                                        <FormLabel className="font-normal">
+                                                            {item}
+                                                        </FormLabel>
+                                                    </FormItem>
+                                                )
+                                            )}
                                         </RadioGroup>
                                     </FormControl>
                                     <FormMessage />
@@ -121,11 +180,14 @@ const PostJobPage: FC<PostJobPageProps> = ({ }) => {
                         />
                     </FieldInput>
 
-                    <FieldInput title="Salary" subtitle='Please specify the estimated salary range for the role.'>
-                        <div className='w-[450px] flex flex-row justify-between items-center'>
+                    <FieldInput
+                        title="Salary"
+                        subtitle="Please specify the estimated salary range for the role."
+                    >
+                        <div className="w-[450px] flex flex-row justify-between items-center">
                             <FormField
                                 control={form.control}
-                                name='salaryFrom'
+                                name="salaryFrom"
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormControl>
@@ -139,10 +201,10 @@ const PostJobPage: FC<PostJobPageProps> = ({ }) => {
                                     </FormItem>
                                 )}
                             />
-                            <span className='text-center'>To</span>
+                            <span className="text-center">To</span>
                             <FormField
                                 control={form.control}
-                                name='salaryTo'
+                                name="salaryTo"
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormControl>
@@ -159,23 +221,34 @@ const PostJobPage: FC<PostJobPageProps> = ({ }) => {
                         </div>
                     </FieldInput>
 
-                    <FieldInput title="Categories" subtitle="You can select job categories">
+                    <FieldInput
+                        title="Categories"
+                        subtitle="You can select job categories"
+                    >
                         <FormField
                             control={form.control}
                             name="categoryId"
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Select Job Categories</FormLabel>
-                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <Select
+                                        onValueChange={field.onChange}
+                                        defaultValue={field.value}
+                                    >
                                         <FormControl>
-                                            <SelectTrigger className='w-[450px]'>
+                                            <SelectTrigger className="w-[450px]">
                                                 <SelectValue placeholder="Select Job Categories" />
                                             </SelectTrigger>
                                         </FormControl>
                                         <SelectContent>
-                                            <SelectItem value="m@example.com">m@example.com</SelectItem>
-                                            <SelectItem value="m@google.com">m@google.com</SelectItem>
-                                            <SelectItem value="m@support.com">m@support.com</SelectItem>
+                                            {data?.map((item: CategoryJob) => (
+                                                <SelectItem
+                                                    key={item.id}
+                                                    value={item.id}
+                                                >
+                                                    {item.name}
+                                                </SelectItem>
+                                            ))}
                                         </SelectContent>
                                     </Select>
                                     <FormMessage />

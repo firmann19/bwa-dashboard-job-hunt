@@ -14,13 +14,30 @@ import { JOB_LISTING_COLUMNS, JOB_LISTING_DATA } from "@/constants";
 import { dateFormat } from "@/lib/utils";
 import moment from "moment";
 import { MoreVertical } from "lucide-react";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import prisma from "../../../../lib/prisma";
+import { Job } from "@prisma/client";
 
 interface JobListingsPageProps { }
 
 export const revalidate = 0;
 
+async function getDataJobs() {
+	const session = await getServerSession(authOptions);
+
+	const jobs = prisma.job.findMany({
+		where: {
+			companyId: session?.user.id,
+		},
+	});
+
+	return jobs;
+}
+
 
 const JobListingsPage: FC<JobListingsPageProps> = async ({ }) => {
+	const jobs = await getDataJobs();
 
 	return (
 		<div>
@@ -39,16 +56,40 @@ const JobListingsPage: FC<JobListingsPageProps> = async ({ }) => {
 						</TableRow>
 					</TableHeader>
 					<TableBody>
-						{JOB_LISTING_DATA.map((item: any, i: number) => (
+						{jobs.map((item: Job, i: number) => (
 							<TableRow key={item.roles + i}>
 								<TableCell>{item.roles}</TableCell>
-								<TableCell><Badge>{item.status}</Badge></TableCell>
-								<TableCell>{item.datePosted}</TableCell>
-								<TableCell>{item.dueDate}</TableCell>
-								<TableCell><Badge variant="outline">{item.jobType}</Badge></TableCell>
+								<TableCell>
+									{moment(item.datePosted).isBefore(
+										item.dueDate
+									) ? (
+										<Badge>Live</Badge>
+									) : (
+										<Badge variant="destructive">
+											Expired
+										</Badge>
+									)}
+								</TableCell>
+								<TableCell>
+									{dateFormat(item.datePosted)}
+								</TableCell>
+								<TableCell>
+									{dateFormat(item.dueDate)}
+								</TableCell>
+								<TableCell>
+									<Badge variant="outline">
+										{item.jobType}
+									</Badge>
+								</TableCell>
 								<TableCell>{item.applicants}</TableCell>
-								<TableCell>{item.applicants} / {item.needs}</TableCell>
-								<TableCell><ButtonActionTable url="/job-detail/1" /></TableCell>
+								<TableCell>
+									{item.applicants} / {item.needs}
+								</TableCell>
+								<TableCell>
+									<ButtonActionTable
+										url={`/job-detail/${item.id}`}
+									/>
+								</TableCell>
 							</TableRow>
 						))}
 					</TableBody>
