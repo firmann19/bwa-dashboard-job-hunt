@@ -10,10 +10,9 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
-import { JOB_LISTING_COLUMNS, JOB_LISTING_DATA } from "@/constants";
+import { JOB_LISTING_COLUMNS } from "@/constants";
 import { dateFormat } from "@/lib/utils";
 import moment from "moment";
-import { MoreVertical } from "lucide-react";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import prisma from "../../../../lib/prisma";

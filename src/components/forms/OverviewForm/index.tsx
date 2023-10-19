@@ -12,30 +12,93 @@ import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/components/ui/use-toast";
 import { EMPLOYEE_OPTIONS, LOCATION_OPTIONS, optionType } from "@/constants";
 import { overviewFormSchema } from "@/lib/form-schema";
-import { cn } from "@/lib/utils";
+import { supabaseUploadFile } from "@/lib/supabase";
+import { cn, fetcher } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Companyoverview, Industry } from "@prisma/client";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { FC, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import useSWR from "swr";
 import { z } from "zod";
 
 interface OverviewFormProps {
-
+	detail: Companyoverview | undefined;
 }
 
-const OverviewForm: FC<OverviewFormProps> = ({ }) => {
+const OverviewForm: FC<OverviewFormProps> = ({ detail }) => {
 	const [editorLoaded, setEditorLoaded] = useState<boolean>(false);
 
-	const form = useForm<z.infer<typeof overviewFormSchema>>({
-		resolver: zodResolver(overviewFormSchema)
-	})
+	const { data: session } = useSession();
+	const { toast } = useToast();
+	const router = useRouter();
 
-	const onSubmit = (val: z.infer<typeof overviewFormSchema>) => {
-		console.log(val)
-	}
+	const { data } = useSWR<Industry[]>("/api/company/industry", fetcher);
+
+	const form = useForm<z.infer<typeof overviewFormSchema>>({
+		resolver: zodResolver(overviewFormSchema),
+		defaultValues: {
+			dateFounded: detail?.dateFounded,
+			description: detail?.description,
+			employee: detail?.employee,
+			image: detail?.image,
+			industry: detail?.industry,
+			location: detail?.location,
+			name: detail?.name,
+			techStack: detail?.techStack,
+			website: detail?.website,
+		},
+	});
+
+	const onSubmit = async (val: z.infer<typeof overviewFormSchema>) => {
+		try {
+			let filename = "";
+
+			console.log("asasasa");
+
+			if (typeof val.image === "object") {
+				const uploadImg = await supabaseUploadFile(
+					val.image,
+					"company"
+				);
+				filename = uploadImg.filename;
+			} else {
+				filename = val.image;
+			}
+
+			const body = {
+				...val,
+				image: filename,
+				companyId: session?.user.id,
+			};
+
+			await fetch("/api/company/overview", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(body),
+			});
+
+			toast({
+				title: "Success",
+				description: "Edit profile success",
+			});
+
+			router.refresh();
+		} catch (error) {
+			await toast({
+				title: "Error",
+				description: "Please try again",
+			});
+
+			console.log(error);
+		}
+	};
 
 	useEffect(() => {
 		setEditorLoaded(true);
@@ -194,7 +257,7 @@ const OverviewForm: FC<OverviewFormProps> = ({ }) => {
 													</SelectTrigger>
 												</FormControl>
 												<SelectContent>
-													{/*	{data?.map(
+													{data?.map(
 														(item: Industry) => (
 															<SelectItem
 																key={item.id}
@@ -205,7 +268,7 @@ const OverviewForm: FC<OverviewFormProps> = ({ }) => {
 																{item.name}
 															</SelectItem>
 														)
-															)} */}
+													)}
 												</SelectContent>
 											</Select>
 											<FormMessage />
@@ -233,7 +296,8 @@ const OverviewForm: FC<OverviewFormProps> = ({ }) => {
 													>
 														{field.value ? (
 															format(
-																field.value, "PPP"
+																field.value,
+																"PPP"
 															)
 														) : (
 															<span>
@@ -291,7 +355,6 @@ const OverviewForm: FC<OverviewFormProps> = ({ }) => {
 						<Button size="lg">Save Changes</Button>
 					</div>
 				</form>
-
 			</Form>
 		</div>
 	);
